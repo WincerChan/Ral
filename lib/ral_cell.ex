@@ -1,7 +1,6 @@
 defmodule Ral.Cell do
   use GenServer
   alias :ets, as: ETS
-  @clear Ral.Clear.start()
 
   @total Application.get_env(:ral, :total)
   @speed Application.get_env(:ral, :speed)
@@ -11,6 +10,7 @@ defmodule Ral.Cell do
   @doc "start Ral.Cell"
   @spec init(any) :: {:ok, nil}
   def init(_) do
+    Ral.Clear.start()
     ETS.new(@member, [:set, :public, :named_table])
     ETS.new(@score, [:ordered_set, :public, :named_table])
     {:ok, nil}
@@ -45,8 +45,8 @@ defmodule Ral.Cell do
 
   defp allow?({rest, now, d_score?, prev}, key) do
     new_rest = min(rest, @total) |> round()
-    send(@clear, {:delete, d_score?, {prev, key}})
-    send(@clear, {:insert, key, now, if(rest <= 0, do: 0, else: new_rest)})
+    send(:clear, {:delete, d_score?, {prev, key}})
+    send(:clear, {:insert, key, now, if(rest <= 0, do: 0, else: new_rest)})
     if rest <= 0, do: false, else: true
   end
 end

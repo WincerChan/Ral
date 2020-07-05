@@ -9,6 +9,7 @@ defmodule Ral.Clear do
   @spec start :: pid
   def start do
     spawn(&run/0)
+    |> Process.register(:clear)
   end
 
   @doc """

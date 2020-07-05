@@ -2,14 +2,13 @@ defmodule Ral.CellTest do
   use ExUnit.Case
 
   test "do test succeed" do
-    Ral.Cell.choke(:one)
-    assert Ral.Cell.choke(:one) == true
+    assert Ral.Cell.choke(:two) == true
   end
 
   @doc """
   please don't add --cover in test command.
   """
-  test "do benchmark..." do
+  test "do test benchmark..." do
     fun = fn
       _, _, 0 ->
         nil
@@ -21,5 +20,6 @@ defmodule Ral.CellTest do
 
     {elapsed, _} = :timer.tc(fn -> fun.(fun, :one, 100_000) end)
     IO.puts(" Test 100_000 times Ral.Cell.choke/1 elapsed #{elapsed / 1000_000} s")
+    assert Ral.Cell.choke(:one) == false
   end
 end
