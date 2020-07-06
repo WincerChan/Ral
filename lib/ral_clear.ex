@@ -1,4 +1,6 @@
 defmodule Ral.Clear do
+  use GenServer
+
   alias :ets, as: ETS
   @score Application.get_env(:ral, :score)
   @member Application.get_env(:ral, :member)
@@ -6,37 +8,38 @@ defmodule Ral.Clear do
   @doc """
   Starting a Ral.Clear process.
   """
-  @spec start :: true
-  def start do
-    ETS.new(@member, [:set, :public, :named_table])
-    ETS.new(@score, [:ordered_set, :public, :named_table])
-
-    spawn(&run/0)
-    |> Process.register(:clear)
+  @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
-  @doc """
-  Receive other process command
-  """
-  @spec run :: no_return
-  def run do
-    receive do
-      {:delete, d_score?, score} -> do_delete(d_score?, score)
-      {:insert, key, now, rest} -> do_insert({key, now, rest})
-      _ -> nil
-    end
-
-    run()
+  @spec init(any) :: {:ok, nil}
+  def init(_) do
+    ETS.new(@member, [:set, :protected, :named_table])
+    ETS.new(@score, [:ordered_set, :protected, :named_table])
+    {:ok, nil}
   end
 
-  defp do_delete(d_score?, {prev, key}) do
+  @spec delete({:delete, boolean(), {DateTime.t(), atom()}}) :: :ok
+  def delete(ops) do
+    GenServer.cast(__MODULE__, ops)
+  end
+
+  @spec insert({:insert, atom(), DateTime.t(), number()}) :: :ok
+  def insert(ops) do
+    GenServer.cast(__MODULE__, ops)
+  end
+
+  def handle_cast({:delete, d_score?, {prev, key}}, state) do
     if d_score?, do: ETS.delete(@score, {prev, key})
     delete_if_expired?(ETS.first(@score), key)
+    {:noreply, state}
   end
 
-  defp do_insert({key, now, rest}) do
+  def handle_cast({:insert, key, now, rest}, state) do
     ETS.insert(@member, {key, now, rest})
     ETS.insert(@score, {{now, key}})
+    {:noreply, state}
   end
 
   defp time_diff(prev), do: DateTime.diff(DateTime.utc_now(), prev)
