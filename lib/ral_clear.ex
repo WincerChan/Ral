@@ -10,36 +10,35 @@ defmodule Ral.Clear do
   """
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(_) do
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+    pid = spawn_link(&run/0)
+    Process.register(pid, :clear)
+
+    {:ok, pid}
   end
 
-  @spec init(any) :: {:ok, nil}
   def init(_) do
-    ETS.new(@member, [:set, :protected, :named_table])
-    ETS.new(@score, [:ordered_set, :protected, :named_table])
     {:ok, nil}
   end
 
-  @spec delete({:delete, boolean(), {DateTime.t(), atom()}}) :: :ok
-  def delete(ops) do
-    GenServer.cast(__MODULE__, ops)
+  def run do
+    receive do
+      {:delete, d_score?, score} -> delete({d_score?, score})
+      {:insert, key, now, rest} -> insert({key, now, rest})
+      _ -> nil
+    end
+
+    run()
   end
 
-  @spec insert({:insert, atom(), DateTime.t(), number()}) :: :ok
-  def insert(ops) do
-    GenServer.cast(__MODULE__, ops)
-  end
-
-  def handle_cast({:delete, d_score?, {prev, key}}, state) do
+  # @spec delete({:delete, boolean(), {DateTime.t(), atom()}}) :: :ok
+  def delete({d_score?, {prev, key}}) do
     if d_score?, do: ETS.delete(@score, {prev, key})
     delete_if_expired?(ETS.first(@score), key)
-    {:noreply, state}
   end
 
-  def handle_cast({:insert, key, now, rest}, state) do
+  def insert({key, now, rest}) do
     ETS.insert(@member, {key, now, rest})
     ETS.insert(@score, {{now, key}})
-    {:noreply, state}
   end
 
   defp time_diff(prev), do: DateTime.diff(DateTime.utc_now(), prev)
