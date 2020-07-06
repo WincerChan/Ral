@@ -5,14 +5,11 @@ defmodule Ral.Cell do
   @total Application.get_env(:ral, :total)
   @speed Application.get_env(:ral, :speed)
   @member Application.get_env(:ral, :member)
-  @score Application.get_env(:ral, :score)
 
   @doc "start Ral.Cell"
   @spec init(any) :: {:ok, nil}
   def init(_) do
     Ral.Clear.start()
-    ETS.new(@member, [:set, :public, :named_table])
-    ETS.new(@score, [:ordered_set, :public, :named_table])
     {:ok, nil}
   end
 

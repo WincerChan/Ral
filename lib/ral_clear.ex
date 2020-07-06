@@ -1,13 +1,16 @@
 defmodule Ral.Clear do
   alias :ets, as: ETS
-  @member Application.get_env(:ral, :member)
   @score Application.get_env(:ral, :score)
+  @member Application.get_env(:ral, :member)
 
   @doc """
   Starting a Ral.Clear process.
   """
-  @spec start :: pid
+  @spec start :: true
   def start do
+    ETS.new(@member, [:set, :public, :named_table])
+    ETS.new(@score, [:ordered_set, :public, :named_table])
+
     spawn(&run/0)
     |> Process.register(:clear)
   end
