@@ -3,6 +3,6 @@ defmodule RalTest do
   doctest Ral
 
   test "greets the world" do
-    assert Ral.hello() == :world
+    assert Ral.hello() == "A rate limiting tool."
   end
 end

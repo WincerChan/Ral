@@ -9,10 +9,10 @@ defmodule Ral do
   ## Examples
 
       iex> Ral.hello()
-      :world
+      "A rate limiting tool."
 
   """
   def hello do
-    :world
+    "A rate limiting tool."
   end
 end
