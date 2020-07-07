@@ -9,8 +9,8 @@ defmodule Ral.Application do
     children = [
       # Starts a worker by calling: Ral.Worker.start_link(arg)
       # {Ral.Worker, arg}
-      Ral.Cell,
-      Ral.Clear
+      Ral.CMD,
+      Ral.ETS
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
