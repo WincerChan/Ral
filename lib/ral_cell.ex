@@ -3,7 +3,6 @@ defmodule Ral.Cell do
 
   @total Application.get_env(:ral, :total)
   @speed Application.get_env(:ral, :speed)
-  @score Application.get_env(:ral, :score)
   @member Application.get_env(:ral, :member)
 
   @spec choke(any) :: boolean
