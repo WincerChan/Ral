@@ -12,17 +12,17 @@ defmodule Ral.Cell do
     |> allow?(key)
   end
 
-  defp calc_rest({rest, prev, d_score?}) do
-    n = DateTime.utc_now()
-
-    {DateTime.diff(n, prev, :millisecond) * @speed / 1000 + rest - 1, n, d_score?, prev}
-  end
-
   defp lookup(key) do
     case ETS.lookup(@member, key) do
       [{_, prev, rest}] -> {rest, prev, true}
       _ -> {@total, DateTime.utc_now(), false}
     end
+  end
+
+  defp calc_rest({rest, prev, d_score?}) do
+    n = DateTime.utc_now()
+
+    {DateTime.diff(n, prev, :millisecond) * @speed / 1000 + rest - 1, n, d_score?, prev}
   end
 
   defp allow?({rest, now, d_score?, prev}, key) do

@@ -1,11 +1,7 @@
 defmodule Ral.CMD do
   @doc """
-  Starting a Ral.CMD process.
+  Supervisor required this specification.
   """
-  def init() do
-    {:ok, nil}
-  end
-
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -16,8 +12,11 @@ defmodule Ral.CMD do
     }
   end
 
+  @doc """
+  Register the run/0 function as process take over by supervisor.
+  """
+  @spec start_link(any) :: {:ok, pid}
   def start_link(_) do
-    # GenServer.start_link(__MODULE__, nil, name: __MODULE__)
     pid = spawn_link(&run/0)
 
     Process.register(pid, __MODULE__)

@@ -60,5 +60,5 @@ defmodule Ral.ETS do
     end
   end
 
-  defp delete_if_expired?({_, _}, _), do: nil
+  defp delete_if_expired?(_, _), do: nil
 end
