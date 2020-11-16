@@ -6,11 +6,16 @@ defmodule Ral.Application do
   use Application
 
   def start(_type, _args) do
+    port = String.to_integer(System.get_env("PORT") || "4040")
+
     children = [
       # Starts a worker by calling: Ral.Worker.start_link(arg)
       # {Ral.Worker, arg}
       Ral.CMD,
-      Ral.ETS
+      Ral.ETS,
+      {Ral.Server, [port]}
+      # {Task.Supervisor, name: Ral.TaskSupervisor},
+      # Supervisor.child_spec({Task, fn -> Ral.Server.accept(port) end}, restart: :permanent)
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
