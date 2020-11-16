@@ -28,15 +28,20 @@ defmodule Ral.Server do
     {:ok, client} = :gen_tcp.accept(socket)
     Logger.warn("Accept a new client #{inspect(client)}.")
 
-    pid = spawn_link(__MODULE__, :serve, [client])
+    pid = spawn(__MODULE__, :serve, [client])
 
     :ok = :gen_tcp.controlling_process(client, pid)
     loop_accept(socket)
   end
 
   def serve(socket) do
-    {:ok, data} = :gen_tcp.recv(socket, 0)
-    :gen_tcp.send(socket, data)
-    serve(socket)
+    case :gen_tcp.recv(socket, 0) do
+      {:ok, data} ->
+        :gen_tcp.send(socket, data)
+        serve(socket)
+
+      _ ->
+        Logger.warn("Lose connection")
+    end
   end
 end
