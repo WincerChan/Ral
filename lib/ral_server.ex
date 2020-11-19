@@ -34,10 +34,15 @@ defmodule Ral.Server do
     loop_accept(socket)
   end
 
+  defp get_choke(data) do
+    {allow?, total, rest, next} = Ral.Cell.choke(data)
+    "!#{allow?}$:#{total}$:#{rest}$%#{next}\r\n"
+  end
+
   def serve(socket) do
     case :gen_tcp.recv(socket, 0) do
       {:ok, data} ->
-        :gen_tcp.send(socket, data)
+        :gen_tcp.send(socket, get_choke(data))
         serve(socket)
 
       _ ->
