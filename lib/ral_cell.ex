@@ -26,21 +26,21 @@ defmodule Ral.Cell do
   defp calc_rest({rest, prev, d_score?}) do
     now = DateTime.utc_now()
     elapsed = DateTime.diff(now, prev, :millisecond)
-    IO.inspect("rest #{rest}")
     new_rest = elapsed * @speed / 1_000 + rest - 1
 
     next_time =
       cond do
-        rest >= 1 -> 0
-        true -> (1 - rest) / @speed
+        new_rest >= 1 -> 0.0
+        new_rest >= 0 -> (1 - new_rest) / @speed
+        true -> 10 - (new_rest + 1) / @speed
       end
+      |> Float.round(2)
 
     {new_rest, now, d_score?, prev, next_time}
-    |> IO.inspect()
   end
 
   defp allow?({rest, now, d_score?, prev, next_time}, key) do
-    new_rest = min(rest, @total) |> IO.inspect()
+    new_rest = min(rest, @total)
 
     cond do
       rest < 0 ->
@@ -49,7 +49,7 @@ defmodule Ral.Cell do
       true ->
         send(Ral.CMD, {:delete, d_score?, {prev, key}})
         send(Ral.CMD, {:insert, key, now, if(rest <= 0, do: 0, else: new_rest)})
-        {true, @total, new_rest, next_time}
+        {true, @total, round(new_rest), next_time}
     end
   end
 end
