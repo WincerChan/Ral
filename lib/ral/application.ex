@@ -6,7 +6,7 @@ defmodule Ral.Application do
   use Application
 
   def start(_type, _args) do
-    port = String.to_integer(System.get_env("PORT") || "4040")
+    port = String.to_integer(System.get_env("PORT") || "4004")
 
     children = [
       # Starts a worker by calling: Ral.Worker.start_link(arg)
