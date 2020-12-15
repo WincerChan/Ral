@@ -29,9 +29,11 @@ defmodule Ral.CMD do
   @spec run :: no_return
   def run do
     receive do
-      {:delete, d_score?, score} -> Ral.ETS.delete({d_score?, score})
-      {:insert, key, now, rest} -> Ral.ETS.insert({key, now, rest})
-      _ -> nil
+      {:upsert, key, prev, now} ->
+        Ral.ETS.upsert({:upsert, key, prev, now})
+
+      _ ->
+        nil
     end
 
     run()

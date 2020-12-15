@@ -1,48 +1,55 @@
 defmodule Ral.Cell do
-  alias :ets, as: ETS
+  alias :mnesia, as: Mnesia
 
   @member Application.get_env(:ral, :member)
 
   def choke(key, total, speed) do
-    lookup(key, total)
-    |> calc_rest(speed)
-    |> allow?(key, total)
+    operation = fn ->
+      lookup(key, total)
+      |> calc_rest({total, speed})
+      |> allow?({key, total, speed})
+    end
+
+    Mnesia.transaction(operation) |> elem(1)
   end
 
   defp lookup(key, total) do
-    case ETS.lookup(@member, key) do
-      [{_, prev, rest}] -> {rest, prev, true}
-      _ -> {total, DateTime.utc_now(), false}
+    case Mnesia.read(@member, key) do
+      [{_, _, old_total, prev, rest}] -> {old_total, rest, prev}
+      _ -> {total, total, DateTime.utc_now()}
     end
   end
 
-  defp calc_rest({rest, prev, d_score?}, speed) do
+  defp calc_rest({old_total, rest, prev}, {total, speed}) do
     now = DateTime.utc_now()
     elapsed = DateTime.diff(now, prev, :millisecond)
-    new_rest = elapsed * speed / 1_000 + rest - 1
+    new_rest = elapsed * speed / 1_000 + rest - 1 - old_total + total
 
-    next_time =
-      cond do
-        new_rest >= 1 -> 0.0
-        new_rest >= 0 -> (1 - new_rest) / speed
-        true -> 10 - (new_rest + 1) / speed
-      end
-      |> Float.round(2)
-
-    {new_rest, now, d_score?, prev, next_time}
+    {new_rest, now, prev}
   end
 
-  defp allow?({rest, now, d_score?, prev, next_time}, key, total) do
+  defp get_next_time(rest, speed) do
+    cond do
+      rest >= 1 -> 0.0
+      rest >= 0 -> (1 - rest) / speed
+      rest < -1 -> 1 / speed
+      true -> 10 - (rest + 1) / speed
+    end
+    |> Float.round(2)
+  end
+
+  defp allow?({rest, now, prev}, {key, total, speed}) do
     new_rest = min(rest, total)
+    next_time = get_next_time(rest, speed)
 
     cond do
-      rest < 0 ->
-        {false, total, 0, next_time}
+      new_rest < 0 ->
+        {0, total, 0, next_time}
 
       true ->
-        send(Ral.CMD, {:delete, d_score?, {prev, key}})
-        send(Ral.CMD, {:insert, key, now, if(rest <= 0, do: 0, else: new_rest)})
-        {true, total, round(new_rest), next_time}
+        Ral.ETS.upsert({:upsert, key, prev, now})
+        Ral.ETS.update(key, total, now, new_rest)
+        {1, total, round(new_rest), next_time}
     end
   end
 end

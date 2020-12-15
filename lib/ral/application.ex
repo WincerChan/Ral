@@ -11,9 +11,10 @@ defmodule Ral.Application do
     children = [
       # Starts a worker by calling: Ral.Worker.start_link(arg)
       # {Ral.Worker, arg}
-      Ral.CMD,
       Ral.ETS,
-      {Ral.Server, [port]}
+      #{Ral.Server, [port]}
+      {Task.Supervisor, name: Ral.Server.TaskSupervisor},
+      Supervisor.child_spec({Task, fn -> Ral.Server.accept(port) end}, restart: :permanent)
       # {Task.Supervisor, name: Ral.TaskSupervisor},
       # Supervisor.child_spec({Task, fn -> Ral.Server.accept(port) end}, restart: :permanent)
     ]

@@ -15,28 +15,33 @@ defmodule Ral.Server do
     pid = spawn_link(__MODULE__, :accept, arg)
     Process.register(pid, __MODULE__)
     {:ok, pid}
+    #:ranch.start_listener(make_ref(), :ranch_tcp, [{:port, 5555}], Ral.Protocol, [])
   end
 
   def accept(port) do
     {:ok, socket} =
-      :gen_tcp.listen(port, [:binary, packet: :line, active: false, reuseaddr: true])
+      :gen_tcp.listen(port, [:binary, packet: 4, active: false, reuseaddr: true])
 
     loop_accept(socket)
   end
 
   def loop_accept(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
+    {:ok, pid} = Task.Supervisor.start_child(Ral.Server.TaskSupervisor, fn ->serve(client) end)
     Logger.warn("Accept a new client #{inspect(client)}.")
-
-    pid = spawn(__MODULE__, :serve, [client])
-
-    :ok = :gen_tcp.controlling_process(client, pid)
+    :gen_tcp.controlling_process(client, pid)
     loop_accept(socket)
   end
 
   defp get_choke(data) do
-    {allow?, total, rest, next} = Ral.Cell.choke(data)
-    "!#{allow?}$:#{total}$:#{rest}$%#{next}\r\n"
+    case Param.extract(data) do
+      [func_name | params] ->
+        {allow?, total, rest, next} = apply(Ral.Cell, func_name, params)
+        <<2, 0::32, allow?::32, 2, 0::32, total::32, 2, 0::32, rest::32, 3, 0::32, next::float, 0, 255>>
+
+      _ ->
+        "error match"
+    end
   end
 
   def serve(socket) do
