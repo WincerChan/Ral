@@ -1,7 +1,6 @@
 defmodule Ral.ETS do
   use GenServer
   alias :ets, as: ETS
-  alias :mnesia, as: Mnesia
   @score Application.get_env(:ral, :score)
   @member Application.get_env(:ral, :member)
 
@@ -10,15 +9,17 @@ defmodule Ral.ETS do
   end
 
   def init(_) do
-    Mnesia.create_schema([node()])
-    Mnesia.start()
-    Mnesia.create_table(@member, attributes: [:key, :total, :nw, :rest])
-
     ETS.new(@score, [
       :ordered_set,
       :protected,
       :named_table,
       {:write_concurrency, true},
+    ])
+    ETS.new(@member, [
+      :set,
+      :public,
+      :named_table,
+      {:read_concurrency, true},
     ])
 
     {:ok, nil}
@@ -36,7 +37,7 @@ defmodule Ral.ETS do
   end
 
   def update(key, total, now, rest) do
-    Mnesia.write({@member, key, total, now, rest})
+    ETS.insert(@member, {key, total, now, rest})
   end
 
   @spec delete_if_expired?(:"$end_of_table" | {DateTime.t(), Atom}, Atom) :: nil
@@ -44,8 +45,7 @@ defmodule Ral.ETS do
 
   defp delete_if_expired?({prev, key}, new_key) when key != new_key do
     if DateTime.diff(DateTime.utc_now(), prev) >= 300 do
-      Mnesia.dirty_delete(@member, key)
-
+      ETS.delete(@member, key)
       ETS.delete(@score, {prev, key})
       delete_if_expired?(ETS.first(@score), new_key)
     end

@@ -1,21 +1,20 @@
 defmodule Ral.Cell do
-  alias :mnesia, as: Mnesia
+  alias :ets, as: ETS
+  require Mutex
 
   @member Application.get_env(:ral, :member)
 
   def choke(key, total, speed) do
-    operation = fn ->
+    Mutex.atomic :ral_lock, key do
       lookup(key, total)
       |> calc_rest({total, speed})
       |> allow?({key, total, speed})
     end
-
-    Mnesia.transaction(operation) |> elem(1)
   end
 
   defp lookup(key, total) do
-    case Mnesia.read(@member, key) do
-      [{_, _, old_total, prev, rest}] -> {old_total, rest, prev}
+    case ETS.lookup(@member, key) do
+      [{_, old_total, prev, rest}] -> {old_total, rest, prev}
       _ -> {total, total, DateTime.utc_now()}
     end
   end

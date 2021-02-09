@@ -13,6 +13,7 @@ defmodule Ral.Application do
       # {Ral.Worker, arg}
       Ral.ETS,
       #{Ral.Server, [port]}
+      {Mutex, name: :ral_lock},
       {Task.Supervisor, name: Ral.Server.TaskSupervisor},
       Supervisor.child_spec({Task, fn -> Ral.Server.accept(port) end}, restart: :permanent)
       # {Task.Supervisor, name: Ral.TaskSupervisor},

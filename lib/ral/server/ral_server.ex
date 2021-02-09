@@ -37,7 +37,7 @@ defmodule Ral.Server do
     case Param.extract(data) do
       [func_name | params] ->
         {allow?, total, rest, next} = apply(Ral.Cell, func_name, params)
-        <<2, 0::32, allow?::32, 2, 0::32, total::32, 2, 0::32, rest::32, 3, 0::32, next::float, 0, 255>>
+        <<2, 0::32, allow?::32, 2, 0::32, total::32, 2, 0::32, rest::32, 3, 0::32, next::float>>
 
       _ ->
         "error match"
