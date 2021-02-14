@@ -32,6 +32,7 @@ defmodule Ral.Cell do
       rest >= 1 -> 0.0
       rest >= 0 -> (1 - rest) / speed
       rest < -1 -> 1 / speed
+      rest >= -1 -> abs(rest) / speed
       true -> 10 - (rest + 1) / speed
     end
     |> Float.round(2)
