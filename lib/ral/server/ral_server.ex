@@ -15,19 +15,17 @@ defmodule Ral.Server do
     pid = spawn_link(__MODULE__, :accept, arg)
     Process.register(pid, __MODULE__)
     {:ok, pid}
-    #:ranch.start_listener(make_ref(), :ranch_tcp, [{:port, 5555}], Ral.Protocol, [])
   end
 
   def accept(port) do
-    {:ok, socket} =
-      :gen_tcp.listen(port, [:binary, packet: 4, active: false, reuseaddr: true])
+    {:ok, socket} = :gen_tcp.listen(port, [:binary, packet: 4, active: false, reuseaddr: true])
 
     loop_accept(socket)
   end
 
   def loop_accept(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
-    {:ok, pid} = Task.Supervisor.start_child(Ral.Server.TaskSupervisor, fn ->serve(client) end)
+    {:ok, pid} = Task.Supervisor.start_child(Ral.Server.TaskSupervisor, fn -> serve(client) end)
     Logger.warn("Accept a new client #{inspect(client)}.")
     :gen_tcp.controlling_process(client, pid)
     loop_accept(socket)
