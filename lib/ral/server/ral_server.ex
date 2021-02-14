@@ -19,6 +19,7 @@ defmodule Ral.Server do
 
   def accept(port) do
     {:ok, socket} = :gen_tcp.listen(port, [:binary, packet: 4, active: false, reuseaddr: true])
+    Logger.warn("Listening on port #{port}...")
 
     loop_accept(socket)
   end
