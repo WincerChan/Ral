@@ -24,3 +24,5 @@ ral-*.tar
 *.beam
 /config/*.secret.exs
 .elixir_ls/
+
+Mnesia.nonode@nohost/
