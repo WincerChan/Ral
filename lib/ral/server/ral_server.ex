@@ -1,7 +1,7 @@
 defmodule Ral.Server do
   require Logger
 
-  @socket_file "/var/run/ral.sock"
+  @socket_file "#{System.user_home()}/opts/ral.sock"
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -24,8 +24,13 @@ defmodule Ral.Server do
     {:ifaddr, {:local, @socket_file}}
   end
 
-  def accept(port) do
-    {:ok, socket} = :gen_tcp.listen(0, [:binary, packet: 4, active: false, reuseaddr: true, socket_config])
+  def accept() do
+    {:ok, socket} =
+      :gen_tcp.listen(
+        0,
+        [:binary, packet: 4, active: false, reuseaddr: true] ++ [socket_config()]
+      )
+
     Logger.warn("Listening on socket file #{@socket_file}...")
 
     loop_accept(socket)
