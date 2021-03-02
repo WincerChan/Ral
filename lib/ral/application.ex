@@ -12,10 +12,10 @@ defmodule Ral.Application do
       # Starts a worker by calling: Ral.Worker.start_link(arg)
       # {Ral.Worker, arg}
       Ral.ETS,
-      #{Ral.Server, [port]}
+      # {Ral.Server, [port]}
       {Mutex, name: :ral_lock},
       {Task.Supervisor, name: Ral.Server.TaskSupervisor},
-      Supervisor.child_spec({Task, fn -> Ral.Server.accept(port) end}, restart: :permanent)
+      Supervisor.child_spec({Task, fn -> Ral.Server.accept() end}, restart: :permanent)
       # {Task.Supervisor, name: Ral.TaskSupervisor},
       # Supervisor.child_spec({Task, fn -> Ral.Server.accept(port) end}, restart: :permanent)
     ]
