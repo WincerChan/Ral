@@ -1,3 +1,12 @@
+defmodule T do
+  def bench(0), do: nil
+
+  def bench(n) do
+    Ral.Cell.choke(rem(n, 1000), 10, 0.1)
+    bench(n - 1)
+  end
+end
+
 defmodule Ral.Cell do
   alias :ets, as: ETS
   require Mutex
