@@ -1,9 +1,12 @@
 import Config
 
-config :ral,
-  # 漏斗容量： 30
-  total: 30,
-  # 恢复速率：0.1/s
-  speed: 0.1,
+config :ral, :table,
   member: :ral_member,
   score: :ral_score
+
+config :ral, :ral_rpc,
+  # tcp or uds
+  # config dir
+  host: {127, 0, 0, 1},
+  # file name
+  addr: 7466

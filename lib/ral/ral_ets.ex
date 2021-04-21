@@ -1,8 +1,8 @@
 defmodule Ral.ETS do
   use GenServer
   alias :ets, as: ETS
-  @score Application.get_env(:ral, :score)
-  @member Application.get_env(:ral, :member)
+  @score Application.get_env(:ral, :table)[:member]
+  @member Application.get_env(:ral, :table)[:score]
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
@@ -13,13 +13,14 @@ defmodule Ral.ETS do
       :ordered_set,
       :protected,
       :named_table,
-      {:write_concurrency, true},
+      {:write_concurrency, true}
     ])
+
     ETS.new(@member, [
       :set,
       :public,
       :named_table,
-      {:read_concurrency, true},
+      {:read_concurrency, true}
     ])
 
     {:ok, nil}

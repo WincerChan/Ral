@@ -17,21 +17,34 @@ defmodule Ral.Server do
     {:ok, pid}
   end
 
-  defp socket_config(sock) do
-    full_name = Path.join(sock, "ral.sock")
+  defp socket_config(dir, sock) do
+    full_name = Path.join(dir, sock)
     File.mkdir_p(Path.dirname(full_name))
     File.rm(full_name)
     {:ifaddr, {:local, full_name}}
   end
 
-  def accept(sock) do
+  def accept(host, port) when is_tuple(host) do
+    {:ok, socket} =
+      :gen_tcp.listen(
+        port,
+        [:binary, packet: 4, active: false, reuseaddr: true, ip: host]
+      )
+
+    Logger.warn("Listening on  #{inspect(host)}:#{port}...")
+
+    loop_accept(socket)
+  end
+
+  def accept(path, file) do
     {:ok, socket} =
       :gen_tcp.listen(
         0,
-        [:binary, packet: 4, active: false, reuseaddr: true] ++ [socket_config(sock)]
+        [:binary, packet: 4, active: false, reuseaddr: true] ++
+          [socket_config(path, file)]
       )
 
-    Logger.warn("Listening on socket file #{sock}...")
+    Logger.warn("Listening on socket file #{file}...")
 
     loop_accept(socket)
   end
