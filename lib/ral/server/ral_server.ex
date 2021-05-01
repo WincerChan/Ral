@@ -62,8 +62,7 @@ defmodule Ral.Server do
       [func_name | params] ->
         {allow?, total, rest, next} = apply(Ral.Cell, func_name, params)
 
-        <<0, 2, 0::32, allow?::64, 0, 2, 0::32, total::64, 0, 2, 0::32, rest::64, 0, 3, 0::32,
-          next::float>>
+        <<2, 0::32, allow?::64, 2, 0::32, total::64, 2, 0::32, rest::64, 3, 0::32, next::float>>
 
       _ ->
         "error match"

@@ -11,7 +11,7 @@ defmodule Ral.Cell do
   alias :ets, as: ETS
   require Mutex
 
-  @member Application.get_env(:ral, :member)
+  @member Application.get_env(:ral, :table)[:member]
 
   def choke(key, total, speed) do
     Mutex.atomic :ral_lock, key do
